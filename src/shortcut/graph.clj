@@ -42,17 +42,15 @@
   (add-edge [graph node1 node2]
             [graph node1 node2 m]))
 
+(extend-protocol NodeSet
+  clojure.lang.PersistentVector
+  (nodes [v] v)
+  (node? [v node] (some #{node} v))
+  (neighbors [v node] (remove #{node} v)))
+
 (defprotocol ArcInGraph
   (start [edge])
   (end [edge]))
-
-(defrecord Edge [node1 node2]
-  NodeSet
-  (nodes [edge] (vector node1 node2))
-  (node? [edge node] (or (= node node1) (= node node2)))
-  (neighbors [edge node] (list (cond
-                                (= node node1) node2
-                                (= node node2) node1))))
 
 (defrecord Arc [start-node end-node]
   NodeSet
@@ -64,6 +62,11 @@
   ArcInGraph
   (start [edge] start-node)
   (end [edge] end-node))
+
+(extend-protocol ArcInGraph
+  clojure.lang.PersistentVector
+  (start [v] (first v))
+  (end [v] (second v)))
 
 (defrecord Graph [node-set edge-map]
   NodeSet
@@ -87,8 +90,8 @@
             (add-edge g n1 n2 nil))
   (add-edge [g n1 n2 meta-data-map]
             (let [obj (if meta-data-map
-                        (with-meta (Edge. n1 n2) meta-data-map)
-                        (Edge. n1 n2))]
+                        (with-meta [n1 n2] meta-data-map)
+                        [n1 n2])]
               (letfn [(add-1-edge [e n1 n2 obj]
                                   (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
                 (if (some #(node? % n2) (edges g n1))
@@ -204,3 +207,5 @@
                 q8
                 (take 10000 (repeatedly #(vector (rand-int 1000)
                                                  (rand-int 1000))))))
+
+

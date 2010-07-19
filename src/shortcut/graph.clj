@@ -65,16 +65,16 @@
   (start [edge] start-node)
   (end [edge] end-node))
 
-;;; forward declaration for make-ugraph which we can't defn until we
+;;; forward declaration for make-graph which we can't defn until we
 ;;; defrecord Graph
-(declare make-ugraph)
+(declare make-graph)
 
 (defrecord Graph [node-set edge-map]
   NodeSet
   (nodes [g] (:node-set g))
   (node? [g node] (get (nodes g) node))
   (add-node [g n]
-            (make-ugraph (conj (:node-set g) n) (:edge-map g)))
+            (make-graph (conj (:node-set g) n) (:edge-map g)))
   (neighbors [g node]
              (map #(first (neighbors % node)) (vals (get (:edge-map g) node))))
   
@@ -94,12 +94,12 @@
                                 (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
               (if (some #(node? % n2) (edges g n1))
                 g
-                (make-ugraph (:node-set g)
+                (make-graph (:node-set g)
                              (add-1-edge
                               (add-1-edge (:edge-map g) n2 n1 obj)
                               n1 n2 obj))))))
 
-(defn make-ugraph
+(defn make-graph
   ([] (Graph. #{} {}))
   ([nodes] (Graph. nodes {}))
   ([nodes edges] (Graph. nodes edges)))
@@ -181,14 +181,14 @@
 
 ;;; scratch
 
-(def q (make-ugraph #{1 2 3 4} {}))
+(def q (make-graph #{1 2 3 4} {}))
 (def q2 (add-edge (add-edge q 3 1) 1 4))
 (def q3 (add-edges q [[1 2] [1 3] [3 4]]))
 (def q4 (add-edges (add-nodes q3 5 6) [[4 5] [1 5] [4 6]]))
-(def q5 (add-edges (make-ugraph #{1 2 3 4 5 6})
+(def q5 (add-edges (make-graph #{1 2 3 4 5 6})
                    [[1 2] [2 3] [3 4] [4 5] [5 6] [6 1]]))
 
-(def q6 (reduce #(add-node %1 %2) (make-ugraph) (range 1000)))
+(def q6 (reduce #(add-node %1 %2) (make-graph) (range 1000)))
 (def q7 (reduce (fn [g [n1 n2]] (add-edge g n1 n2))
                 q6
                 (take 10000 (repeatedly #(vector (rand-int 1000)
@@ -196,7 +196,7 @@
 (neighbors q7 1)
 (take-while (complement #{2}) (breadth-first-traversal q7 1))
 
-(def q8 (reduce #(add-node %1 (str "node" %2)) (make-ugraph) (range 1000)))
+(def q8 (reduce #(add-node %1 (str "node" %2)) (make-graph) (range 1000)))
 
 
 (def q9 (reduce (fn [g [n1 n2]] (add-edge g

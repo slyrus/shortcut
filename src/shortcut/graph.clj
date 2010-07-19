@@ -40,7 +40,7 @@
          [graph node])
   (edge? [graph node1 node2])
   (add-edge [graph node1 node2]
-            [graph node1 node2 object]))
+            [graph node1 node2 m]))
 
 (defprotocol ArcInGraph
   (start [edge])
@@ -84,16 +84,19 @@
          (some #(when (node? % n2) %)
                (vals (get (:edge-map g) n1))))
   (add-edge [g n1 n2]
-            (add-edge g n1 n2 (Edge. n1 n2)))
-  (add-edge [g n1 n2 obj]
-            (letfn [(add-1-edge [e n1 n2 obj]
-                                (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
-              (if (some #(node? % n2) (edges g n1))
-                g
-                (Graph. (:node-set g)
-                             (add-1-edge
-                              (add-1-edge (:edge-map g) n2 n1 obj)
-                              n1 n2 obj))))))
+            (add-edge g n1 n2 nil))
+  (add-edge [g n1 n2 meta-data-map]
+            (let [obj (if meta-data-map
+                        (with-meta (Edge. n1 n2) meta-data-map)
+                        (Edge. n1 n2))]
+              (letfn [(add-1-edge [e n1 n2 obj]
+                                  (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
+                (if (some #(node? % n2) (edges g n1))
+                  g
+                  (Graph. (:node-set g)
+                          (add-1-edge
+                           (add-1-edge (:edge-map g) n2 n1 obj)
+                           n1 n2 obj)))))))
 
 (defn make-graph
   ([] (Graph. #{} {}))

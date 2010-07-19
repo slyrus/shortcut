@@ -65,16 +65,12 @@
   (start [edge] start-node)
   (end [edge] end-node))
 
-;;; forward declaration for make-graph which we can't defn until we
-;;; defrecord Graph
-(declare make-graph)
-
 (defrecord Graph [node-set edge-map]
   NodeSet
   (nodes [g] (:node-set g))
   (node? [g node] (get (nodes g) node))
   (add-node [g n]
-            (make-graph (conj (:node-set g) n) (:edge-map g)))
+            (Graph. (conj (:node-set g) n) (:edge-map g)))
   (neighbors [g node]
              (map #(first (neighbors % node)) (vals (get (:edge-map g) node))))
   
@@ -94,7 +90,7 @@
                                 (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
               (if (some #(node? % n2) (edges g n1))
                 g
-                (make-graph (:node-set g)
+                (Graph. (:node-set g)
                              (add-1-edge
                               (add-1-edge (:edge-map g) n2 n1 obj)
                               n1 n2 obj))))))
@@ -102,7 +98,7 @@
 (defn make-graph
   ([] (Graph. #{} {}))
   ([nodes] (Graph. nodes {}))
-  ([nodes edges] (Graph. nodes edges)))
+  ([nodes edge-vec] (add-edges (Graph. nodes {}) edge-vec)))
 
 (defn add-edges [g edge-vec]
   (reduce (fn [g [n1 n2]] (add-edge g n1 n2)) g edge-vec))

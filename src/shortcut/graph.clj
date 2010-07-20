@@ -33,6 +33,7 @@
   (nodes [graph])
   (node? [graph node])
   (add-node [graph node])
+  (remove-node [graph node])
   (neighbors [graph node]))
 
 (defprotocol EdgeSet
@@ -40,7 +41,8 @@
          [graph node])
   (edge? [graph node1 node2])
   (add-edge [graph node1 node2]
-            [graph node1 node2 m]))
+            [graph node1 node2 m])
+  (remove-edge [graph node1 node2]))
 
 (extend-protocol NodeSet
   clojure.lang.PersistentVector
@@ -74,6 +76,12 @@
   (node? [g node] (get (nodes g) node))
   (add-node [g n]
             (Graph. (conj (:node-set g) n) (:edge-map g)))
+  (remove-node [g n]
+               (Graph. (disj (:node-set g) n)
+                       (:edge-map (reduce (fn [g [n1 n2]]
+                                            (remove-edge g n1 n2))
+                                          g
+                                          (edges g n)))))
   (neighbors [g node]
              (map #(first (neighbors % node)) (vals (get (:edge-map g) node))))
   
@@ -99,7 +107,17 @@
                   (Graph. (:node-set g)
                           (add-1-edge
                            (add-1-edge (:edge-map g) n2 n1 obj)
-                           n1 n2 obj)))))))
+                           n1 n2 obj))))))
+  (remove-edge [g n1 n2]
+               (letfn [(remove-1-edge [e n1 n2]
+                                      (let [inner (dissoc (or (get e n1) {}) n2)]
+                                        (if (seq inner)
+                                          (assoc e n1 inner)
+                                          (dissoc e n1))))]
+                 (Graph. (:node-set g)
+                         (remove-1-edge
+                          (remove-1-edge (:edge-map g) n2 n1)
+                          n1 n2)))))
 
 (defn make-graph
   ([] (Graph. #{} {}))
@@ -179,6 +197,7 @@
                         (into (rest queue)
                               (vec (map #(conj (first queue) %) (vec next))))
                         visited)))))))
+
 
 
 ;;; scratch

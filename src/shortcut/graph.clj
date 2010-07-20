@@ -198,7 +198,11 @@
                               (vec (map #(conj (first queue) %) (vec next))))
                         visited)))))))
 
-
+(defn remove-connected-component [g start]
+  (let [neighbors (neighbors g start)]
+    (reduce remove-connected-component
+            (remove-node g start)
+            neighbors)))
 
 ;;; scratch
 

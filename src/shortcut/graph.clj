@@ -133,14 +133,14 @@
 (defn breadth-first-traversal
   ([g start]
      (when (node? g start)
-       (breadth-first-traversal g [start] #{})))
+       (breadth-first-traversal g (conj (clojure.lang.PersistentQueue/EMPTY) start) #{})))
   ([g queue visited]
      (lazy-seq
-      (if (seq queue)
-        (let [node (first queue)
+      (if (peek queue)
+        (let [node (peek queue)
               next (remove visited (neighbors g node))]
           (cons node
-                (breadth-first-traversal g (into (subvec queue 1) next)
+                (breadth-first-traversal g (into (pop queue) next)
                                          (into (conj visited node) next))))))))
 
 ;;; often it's nice to not just do a search, but keep a trail of the
@@ -150,18 +150,19 @@
 (defn breadth-first-traversal-with-path
   ([g start]
      (when (node? g start)
-       (breadth-first-traversal-with-path g [[start]] #{})))
+       (breadth-first-traversal-with-path
+         g (conj (clojure.lang.PersistentQueue/EMPTY) [start]) #{})))
   ([g queue visited]
      (lazy-seq
-      (if (seq queue)
-        (let [node (last (first queue))
+      (if (peek queue)
+        (let [path (peek queue)
+              node (last path)
               next (remove visited (neighbors g node))]
-          (cons (first queue)
-                (breadth-first-traversal-with-path
-                  g
-                  (into (subvec queue 1)
-                        (vec (map #(conj (first queue) %) (vec next))))
-                  (into (conj visited node) next))))))))
+          (cons path (breadth-first-traversal-with-path
+                       g
+                       (into (pop queue)
+                             (vec (map #(conj path %) (vec next))))
+                       (into (conj visited node) next))))))))
 
 (defn depth-first-traversal
   ([g start]

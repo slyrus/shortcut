@@ -50,74 +50,66 @@
   (node? [v node] (some #{node} v))
   (neighbors [v node] (remove #{node} v)))
 
-(defprotocol ArcInGraph
+;;; Arcs aren't supported yet. keep the protocol and some methods on it
+;;; here for the moment though.
+(defprotocol Arc
   (start [edge])
   (end [edge]))
 
-(defrecord Arc [start-node end-node]
-  NodeSet
-  (nodes [edge] (vector start-node end-node))
-  (node? [edge node] (or (= node start-node) (= node end-node)))
-  (neighbors [edge node] (list (cond
-                                (= node start-node) end-node
-                                (= node end-node) start-node)))
-  ArcInGraph
-  (start [edge] start-node)
-  (end [edge] end-node))
-
-(extend-protocol ArcInGraph
+(extend-protocol Arc
   clojure.lang.PersistentVector
   (start [v] (first v))
   (end [v] (second v)))
 
-(defrecord Graph [node-set edge-map]
-  NodeSet
-  (nodes [g] (:node-set g))
-  (node? [g node] (get (nodes g) node))
+(extend-protocol NodeSet
+  clojure.lang.IPersistentMap
+  (nodes [v] (::node-set v))
+  (node? [v node] (get (nodes v) node))
   (add-node [g n]
-            (Graph. (conj (:node-set g) n) (:edge-map g)))
-  (remove-node [g n]
-               (Graph. (disj (:node-set g) n)
-                       (:edge-map (reduce (fn [g [n1 n2]]
-                                            (remove-edge g n1 n2))
-                                          g
-                                          (edges g n)))))
-  (neighbors [g node]
-             (map #(first (neighbors % node)) (vals (get (:edge-map g) node))))
-  
-  EdgeSet
+            (assoc g ::node-set (conj (::node-set g) n)))
+  (remove-node [v node]
+               (assoc v
+                 ::node-set (disj (::node-set v) node)
+                 ::edge-map (reduce (fn [v [n1 n2]]
+                                      (remove-edge v n1 n2))
+                                    v
+                                    (edges v node))))
+  (neighbors [v node]
+             (map #(first (neighbors % node)) (vals (get (::edge-map v) node)))))
+
+(extend-protocol EdgeSet
+  clojure.lang.IPersistentMap
   (edges [g]
-         (distinct (apply concat (map vals (vals (:edge-map g))))))
+         (distinct (apply concat (map vals (vals (::edge-map g))))))
   (edges [g node]
-         (vals (get (:edge-map g) node)))
-  
+         (vals (get (::edge-map g) node)))
   (edge? [g n1 n2]
          (some #(when (node? % n2) %)
-               (vals (get (:edge-map g) n1))))
-  (add-edge [g n1 n2]
-            (add-edge g n1 n2 nil))
-  (add-edge [g n1 n2 meta-data-map]
-            (let [obj (if meta-data-map
-                        (with-meta [n1 n2] meta-data-map)
-                        [n1 n2])]
-              (letfn [(add-1-edge [e n1 n2 obj]
-                                  (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
-                (if (some #(node? % n2) (edges g n1))
-                  g
-                  (Graph. (:node-set g)
-                          (add-1-edge
-                           (add-1-edge (:edge-map g) n2 n1 obj)
-                           n1 n2 obj))))))
+               (vals (get (::edge-map g) n1))))
+  (add-edge ([g n1 n2]
+               (add-edge g n1 n2 nil))
+            ([g n1 n2 meta-data-map]
+               (let [obj (if meta-data-map
+                           (with-meta [n1 n2] meta-data-map)
+                           [n1 n2])]
+                 (letfn [(add-1-edge [e n1 n2 obj]
+                                     (assoc e n1 (assoc (or (get e n1) {}) n2 obj)))]
+                   (if (some #(node? % n2) (edges g n1))
+                     g
+                     (assoc g ::edge-map
+                            (add-1-edge
+                             (add-1-edge (::edge-map g) n2 n1 obj)
+                             n1 n2 obj)))))))
   (remove-edge [g n1 n2]
                (letfn [(remove-1-edge [e n1 n2]
                                       (let [inner (dissoc (or (get e n1) {}) n2)]
                                         (if (seq inner)
                                           (assoc e n1 inner)
                                           (dissoc e n1))))]
-                 (Graph. (:node-set g)
-                         (remove-1-edge
-                          (remove-1-edge (:edge-map g) n2 n1)
-                          n1 n2)))))
+                 (assoc g ::edge-map
+                        (remove-1-edge
+                         (remove-1-edge (::edge-map g) n2 n1)
+                         n1 n2)))))
 
 (defn add-edges [g edge-vec]
   (reduce (fn [g [n1 n2]] (add-edge g n1 n2)) g edge-vec))
@@ -126,9 +118,9 @@
   (reduce (fn [g node] (add-node g node)) g node-vec))
 
 (defn make-graph
-  ([] (Graph. #{} {}))
-  ([nodes] (Graph. nodes {}))
-  ([nodes edge-vec] (add-edges (Graph. nodes {}) edge-vec)))
+  ([] (assoc {} ::node-set #{} ::edge-map {}))
+  ([nodes] (assoc {} ::node-set nodes ::edge-map{}))
+  ([nodes edge-vec] (add-edges (make-graph nodes) edge-vec)))
 
 (defn breadth-first-traversal
   ([g start]

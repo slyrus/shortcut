@@ -143,7 +143,7 @@
        (breadth-first-traversal g (conj (clojure.lang.PersistentQueue/EMPTY) start) #{})))
   ([g queue visited]
      (lazy-seq
-      (if (peek queue)
+      (when (peek queue)
         (let [node (peek queue)
               next (remove visited (neighbors g node))]
           (cons node
@@ -161,14 +161,14 @@
          g (conj (clojure.lang.PersistentQueue/EMPTY) [start]) #{})))
   ([g queue visited]
      (lazy-seq
-      (if (peek queue)
+      (when (peek queue)
         (let [path (peek queue)
               node (last path)
               next (remove visited (neighbors g node))]
           (cons path (breadth-first-traversal-with-path
                        g
                        (into (pop queue)
-                             (vec (map #(conj path %) (vec next))))
+                             (map #(conj path %) next))
                        (into (conj visited node) next))))))))
 
 (defn depth-first-traversal
@@ -177,7 +177,7 @@
        (depth-first-traversal g (list start) #{})))
   ([g queue visited]
      (lazy-seq
-      (if (seq queue)
+      (when (seq queue)
         (let [node (first queue)
               next (remove visited (neighbors g node))]
           (if-not (visited node)
@@ -192,18 +192,18 @@
        (depth-first-traversal-with-path g (list [start]) #{})))
   ([g queue visited]
      (lazy-seq
-      (if (seq queue)
+      (when (seq queue)
         (let [node (last (first queue))
               next (remove visited (neighbors g node))]
           (if-not (visited node)
             (cons (first queue)
                   (depth-first-traversal-with-path g
                     (into (rest queue)
-                          (vec (map #(conj (first queue) %) (vec next))))
+                          (map #(conj (first queue) %) next))
                     (conj visited node)))
             (depth-first-traversal-with-path g
                         (into (rest queue)
-                              (vec (map #(conj (first queue) %) (vec next))))
+                              (map #(conj (first queue) %) next))
                         visited)))))))
 
 (defn remove-connected-component [g start]

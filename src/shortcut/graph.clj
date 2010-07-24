@@ -68,12 +68,13 @@
   (add-node [g n]
             (assoc g ::node-set (conj (::node-set g) n)))
   (remove-node [v node]
-               (assoc v
-                 ::node-set (disj (::node-set v) node)
-                 ::edge-map (reduce (fn [v [n1 n2]]
-                                      (remove-edge v n1 n2))
-                                    v
-                                    (edges v node))))
+               (let [edges-removed (reduce (fn [v [n1 n2]]
+                                             (remove-edge v n1 n2))
+                                           v
+                                    (edges v node))]
+                 (assoc v
+                   ::node-set (disj (::node-set edges-removed) node)
+                   ::edge-map (::edge-map edges-removed))))
   (neighbors [v node]
              (map #(first (neighbors % node)) (vals (get (::edge-map v) node)))))
 
@@ -192,8 +193,8 @@
                         visited)))))))
 
 (defn remove-connected-component [g start]
-  (let [neighbors (neighbors g start)]
-    (reduce remove-connected-component
-            (remove-node g start)
-            neighbors)))
+  (reduce remove-connected-component
+          (remove-node g start)
+          (neighbors g start)))
+
 

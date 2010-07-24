@@ -40,9 +40,11 @@
   (edges [graph]
          [graph node])
   (edge? [graph node1 node2])
-  (add-edge [graph node1 node2]
+  (add-edge [graph edge]
+            [graph node1 node2]
             [graph node1 node2 m])
-  (remove-edge [graph node1 node2]))
+  (remove-edge [graph edge]
+               [graph node1 node2]))
 
 (extend-protocol NodeSet
   clojure.lang.PersistentVector
@@ -87,8 +89,18 @@
   (edge? [g n1 n2]
          (some #(when (node? % n2) %)
                (vals (get (::edge-map g) n1))))
-  (add-edge ([g n1 n2]
-               (add-edge g n1 n2 nil))
+  (add-edge ([g edge]
+               (let [[n1 n2] edge]
+                 (letfn [(add-1-edge [e n1 n2]
+                                     (assoc e n1 (assoc (or (get e n1) {}) n2 edge)))]
+                   (if (some #(node? % n2) (edges g n1))
+                     g
+                     (assoc g ::edge-map
+                            (add-1-edge
+                             (add-1-edge (::edge-map g) n2 n1)
+                             n1 n2))))))
+            ([g n1 n2]
+                (add-edge g n1 n2 nil))
             ([g n1 n2 meta-data-map]
                (let [obj (if meta-data-map
                            (with-meta [n1 n2] meta-data-map)
@@ -101,16 +113,18 @@
                             (add-1-edge
                              (add-1-edge (::edge-map g) n2 n1 obj)
                              n1 n2 obj)))))))
-  (remove-edge [g n1 n2]
-               (letfn [(remove-1-edge [e n1 n2]
-                                      (let [inner (dissoc (or (get e n1) {}) n2)]
-                                        (if (seq inner)
-                                          (assoc e n1 inner)
-                                          (dissoc e n1))))]
-                 (assoc g ::edge-map
-                        (remove-1-edge
-                         (remove-1-edge (::edge-map g) n2 n1)
-                         n1 n2)))))
+  (remove-edge ([g edge]
+                  (apply remove-edge g edge))
+               ([g n1 n2]
+                  (letfn [(remove-1-edge [e n1 n2]
+                                         (let [inner (dissoc (or (get e n1) {}) n2)]
+                                           (if (seq inner)
+                                             (assoc e n1 inner)
+                                             (dissoc e n1))))]
+                    (assoc g ::edge-map
+                           (remove-1-edge
+                            (remove-1-edge (::edge-map g) n2 n1)
+                            n1 n2))))))
 
 (defn add-edges [g edge-vec]
   (reduce (fn [g [n1 n2]] (add-edge g n1 n2)) g edge-vec))
@@ -197,4 +211,18 @@
           (remove-node g start)
           (neighbors g start)))
 
+(defn connected-component [old start]
+  (letfn [(connected-component-2
+           [[old new] node]
+           (reduce connected-component-2
+                   (let [[old2 new2]
+                         (reduce (fn [[old new] edge]
+                                   [(remove-edge old edge)
+                                    (add-edge new edge)])
+                                 [old new]
+                                 (edges old node))]
+                     [(remove-node old2 node)
+                      (add-node new2 node)])
+                   (neighbors old node)))]
+    (second (connected-component-2 [old (make-graph)] start))))
 

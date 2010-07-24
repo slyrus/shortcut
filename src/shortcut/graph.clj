@@ -207,22 +207,33 @@
                         visited)))))))
 
 (defn remove-connected-component [g start]
+  "returns a graph from which the connected component containing start
+is removed."
   (reduce remove-connected-component
           (remove-node g start)
           (neighbors g start)))
 
-(defn connected-component [old start]
-  (letfn [(connected-component-2
-           [[old new] node]
-           (reduce connected-component-2
-                   (let [[old2 new2]
-                         (reduce (fn [[old new] edge]
-                                   [(remove-edge old edge)
-                                    (add-edge new edge)])
-                                 [old new]
+(defn partition-graph [graph start]
+  "partition graph returns a 2-element vector. the first element is a
+graph of the connected component of graph contating start and the
+second element is the a graph containing the rest of graph, that is
+graph after removing the connected component containing start."
+  (letfn [(connected-component*
+           [[new old] node]
+           (reduce connected-component*
+                   (let [[new2 old2]
+                         (reduce (fn [[new old] edge]
+                                   [(add-edge new edge)
+                                    (remove-edge old edge)])
+                                 [new old]
                                  (edges old node))]
-                     [(remove-node old2 node)
-                      (add-node new2 node)])
+                     [(add-node new2 node)
+                      (remove-node old2 node)])
                    (neighbors old node)))]
-    (second (connected-component-2 [old (make-graph)] start))))
+    (connected-component* [(make-graph) graph] start)))
+
+(defn connected-component [graph start]
+  "returns a graph corresponding the connected component of graph that
+contains start."
+  (first (partition-graph graph start)))
 

@@ -79,10 +79,10 @@
 
 (extend-protocol EdgeSet
   clojure.lang.IPersistentMap
-  (edges [g]
-         (distinct (apply concat (map vals (vals (::edge-map g))))))
-  (edges [g node]
-         (vals (get (::edge-map g) node)))
+  (edges ([g]
+            (distinct (apply concat (map vals (vals (::edge-map g))))))
+         ([g node]
+            (vals (get (::edge-map g) node))))
   (edge? [g n1 n2]
          (some #(when (node? % n2) %)
                (vals (get (::edge-map g) n1))))

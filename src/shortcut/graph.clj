@@ -237,16 +237,11 @@ graph after removing the connected component containing start."
 contains start."
   (first (partition-graph graph start)))
 
-(defn connected-components [graph & acc]
-  (letfn [(connected-components*
-           [graph acc]
-           (if (empty? (nodes graph))
-             acc
-             (let [[part rest]
-                   (partition-graph graph (first (nodes graph)))]
-               (when (nodes rest)
-                 (connected-components*
-                  rest
-                  (conj acc part))))))]
-    (connected-components* graph nil)))
+(defn connected-components [graph & [acc]]
+  "returns a sequence of the connected components of g"
+  (if (empty? (nodes graph))
+    acc
+    (let [[part rest] (partition-graph graph (first (nodes graph)))]
+      (when (nodes rest)
+        (connected-components rest (conj acc part))))))
 

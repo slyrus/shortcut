@@ -259,13 +259,30 @@ first node of the vector to the last node of the vector."
 
 
 (defn graph-distance-hash [g]
+  "Return a hashmap with entries for each node containing 2-element
+arrays of the nodes in g and the distances (shortest path) from the
+first node to the second node"
   (reduce (fn [m node]
             (conj m
                   {node
                    (map (fn [path]
-                          {(last path) (dec (count path))})
+                          [(last path) (dec (count path))])
                         (breadth-first-traversal-with-path g node))}))
           {}
           (nodes g)))
 
-
+(defn graph-distance-matrix [g]
+  "Returns a 2-d array of the distance (shortest path) between two
+nodes. The distance between a node and itself is 0. If a node is
+unreachable from another node, the distance between the nodes is -1."
+  (let [hash (graph-distance-hash g)
+        size (count (nodes g))]
+    (let [a (make-array (. Integer TYPE) size size)
+          nodes (nodes g)]
+      (dotimes [i size]
+        (dotimes [j size]
+          (aset a i j -1)))
+      (doseq [outer nodes]
+        (doseq [[inner distance] (get hash outer)]
+          (aset a (dec outer) (dec inner) distance)))
+      a)))

@@ -27,7 +27,8 @@
 ;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns shortcut.graph)
+(ns shortcut.graph
+  (:use clojure.contrib.seq))
 
 (defprotocol NodeSet
   (nodes [graph])
@@ -271,6 +272,11 @@ first node to the second node"
           {}
           (nodes g)))
 
+(defn position [coll x]
+  (some (fn [[a b]]
+          (when (= b x) a))
+        (indexed coll)))
+
 (defn graph-distance-matrix [g]
   "Returns a 2-d array of the distance (shortest path) between two
 nodes. The distance between a node and itself is 0. If a node is
@@ -284,5 +290,7 @@ unreachable from another node, the distance between the nodes is -1."
           (aset a i j -1)))
       (doseq [outer nodes]
         (doseq [[inner distance] (get hash outer)]
-          (aset a (dec outer) (dec inner) distance)))
+          (let [outindex (position nodes outer)
+                inindex (position nodes inner)]
+            (aset a outindex inindex distance))))
       a)))

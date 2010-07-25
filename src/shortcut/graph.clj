@@ -245,3 +245,27 @@ contains start."
       (when (nodes rest)
         (connected-components rest (conj acc part))))))
 
+(defn find-longest-paths [g]
+  "Finds a longest path acecssible from each node in the
+graph. Returns a sequence of vectors containing the longest shortest paths for each
+node. Each vector represents the path to the farthest node from the
+first node of the vector to the last node of the vector."
+  (map (fn [start]
+         (first
+          (reverse
+           (sort-by count
+                    (breadth-first-traversal-with-path g start)))))
+       (nodes g)))
+
+
+(defn graph-distance-hash [g]
+  (reduce (fn [m node]
+            (conj m
+                  {node
+                   (map (fn [path]
+                          {(last path) (dec (count path))})
+                        (breadth-first-traversal-with-path g node))}))
+          {}
+          (nodes g)))
+
+

@@ -172,6 +172,30 @@
                              (map #(conj path %) next))
                        (into (conj visited node) next))))))))
 
+(defn find-node
+  "finds the target node in g, either starting from a given node, or
+from an (arbitrarily chosen) first node. If target is unreachable from
+the starting node, returns nil."
+  ([g target]
+     (find-node g target (first (nodes g))))
+  ([g target start]
+     (when (node? g start)
+       (find-node
+        g target (conj (clojure.lang.PersistentQueue/EMPTY) [start]) #{})))
+  ([g target queue visited]
+     (when (peek queue)
+       (let [path (peek queue)
+             node (last path)
+             next (remove visited (neighbors g node))]
+         (if (= node target)
+           path
+           (find-node
+            g
+            target
+            (into (pop queue)
+                  (map #(conj path %) next))
+            (into (conj visited node) next)))))))
+
 (defn depth-first-traversal
   ([g start]
      (when (node? g start)

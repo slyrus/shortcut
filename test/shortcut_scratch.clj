@@ -1,5 +1,5 @@
 
-(ns shortcut-test
+(ns shortcut_scratch
   (:use shortcut.graph))  
 
 (def q (make-graph #{1 2 3 4} {}))

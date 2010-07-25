@@ -1,6 +1,7 @@
 
 (ns shortcut-scratch
-  (:use shortcut.graph))  
+  (:use shortcut.graph)
+  (:use clojure.contrib.seq))
 
 (def q (make-graph #{1 2 3 4} {}))
 (def q2 (add-edge (add-edge q 3 1) 1 4))
@@ -27,6 +28,14 @@
                 (take 10000 (repeatedly #(vector (rand-int 1000)
                                                  (rand-int 1000))))))
 
+
+(def q10 (add-edges (make-graph (set (range 1 10)))
+                    [[1 2] [1 3] [3 4] [4 5] [2 6] [7 8] [8 9] [7 9]]))
+
+(map clojure.pprint/pprint
+     (map #(vector %
+                   (graph-distance-matrix %))
+          (connected-components q10)))
 
 (defn neighborfn [g]
   (fn [n] (neighbors g n)))

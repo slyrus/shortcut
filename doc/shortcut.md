@@ -18,13 +18,13 @@ execute the following:
 To create a graph, one can use the make-graph function:
 
 > user=> (make-graph)
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{}}
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{}}
 
 Of course a graph with no nodes and no edges, isn't particulary
 interesting, so let's create a graph with some nodes:
 
-> user=> (make-graph #{1 2 3 4} {})
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{1 2 3 4}}
+> user=> (make-graph \#{1 2 3 4} {})
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{1 2 3 4}}
 
 Now we see that we've created a graph, represented by a map with two
 entries, one for the nodes and one for the edges. Note that the nodes
@@ -40,8 +40,8 @@ To create a graph with nodes and edges, pass a set of nodes and a set
 of two-element vectors for the edges, each containing the two nodes to
 be connected by an edge:
 
-> user> (make-graph #{1 2 3 4} #{[1 2] [1 3] [3 4]})
-> {:shortcut.graph/edge-map {1 {3 [1 3], 2 [1 2]}, 2 {1 [1 2]}, 3 {1 [1 3], 4 [3 4]}, 4 {3 [3 4]}}, :shortcut.graph/node-set #{1 2 3 4}}
+> user> (make-graph \#{1 2 3 4} \#{[1 2] [1 3] [3 4]})
+> {:shortcut.graph/edge-map {1 {3 [1 3], 2 [1 2]}, 2 {1 [1 2]}, 3 {1 [1 3], 4 [3 4]}, 4 {3 [3 4]}}, :shortcut.graph/node-set \#{1 2 3 4}}
 
 
 ## Immutable Graphs
@@ -51,42 +51,42 @@ immutable. If one wants to add a node to a graph, one makes an
 entirely new graph, with the nodes of the original graph and the new
 node added. To see an example of this, first lets make a graph and store it in a var:
 
-> user> (def q (make-graph #{1 2 3 4} {}))
+> user> (def q (make-graph \#{1 2 3 4} {}))
 > #'user/q
 
 To make sure that we did this right, let's check the nodes of q:
 
 > user> (nodes q)
-> #{1 2 3 4}
+> \#{1 2 3 4}
 
 So far so good. Now let's an edge between nodes 1 and 2:
 
 > user> (add-edge q 1 2)
-> {:shortcut.graph/edge-map {1 {2 [1 2]}, 2 {1 [1 2]}}, :shortcut.graph/node-set #{1 2 3 4}}
+> {:shortcut.graph/edge-map {1 {2 [1 2]}, 2 {1 [1 2]}}, :shortcut.graph/node-set \#{1 2 3 4}}
 
-Now we see that we have the ndoe set #{1 2 3 4} as before, but we also
+Now we see that we have the ndoe set \#{1 2 3 4} as before, but we also
 have the edge [1 2], stored twice in the map of edges of this graph,
 once coming from the first node, 1, and once from the second node, 2.
 
 However, notice that we didn't change q:
 
 > user> q
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{1 2 3 4}}
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{1 2 3 4}}
 
 Similarly, we can add a node to q:
 
 > user> (add-node q 5)
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{1 2 3 4 5}}
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{1 2 3 4 5}}
 
 But again, note that we didn't change q:
 
 > user> q
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{1 2 3 4}}
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{1 2 3 4}}
 
 If we want to add multiple nodes and edges, we can just call add-node or add-edge as appropriate to the results of the previous add-node or add-edge call:
 
 > user> (add-edge (add-edge q 3 1) 1 4)
-> {:shortcut.graph/edge-map {4 {1 [1 4]}, 3 {1 [3 1]}, 1 {4 [1 4], 3 [3 1]}}, :shortcut.graph/node-set #{1 2 3 4}}
+> {:shortcut.graph/edge-map {4 {1 [1 4]}, 3 {1 [3 1]}, 1 {4 [1 4], 3 [3 1]}}, :shortcut.graph/node-set \#{1 2 3 4}}
 
 While this may seem like more work than creating a mutable graph and
 adding nodes or edges to it, the clojure internals are designed for
@@ -109,17 +109,17 @@ the node to be removed and any edges containing that node, call
 remove-node:
 
 > user> (remove-node q 2) 
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{1 3 4}}
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{1 3 4}}
 
 Note that edges containing the node are removed as well:
 
 > user> (remove-node (add-edge q 1 2) 2) 
-> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{1 3 4}}
+> {:shortcut.graph/edge-map {}, :shortcut.graph/node-set \#{1 3 4}}
 
 To remove an edge, use the remove-edge function:
 
 > user> (remove-edge q2 1 3)
-> {:shortcut.graph/edge-map {4 {1 [1 4]}, 1 {4 [1 4]}}, :shortcut.graph/node-set #{1 2 3 4}}
+> {:shortcut.graph/edge-map {4 {1 [1 4]}, 1 {4 [1 4]}}, :shortcut.graph/node-set \#{1 2 3 4}}
 
 To make a graph with 1000 nodes where the nodes are the integers from 0 to 999, do:
 
@@ -191,7 +191,7 @@ And we'll see that we get different results from doing a depth-first-search:
 
 To see what's going on here, let's try a simpler example:
 
-> user> (def q3 (make-graph #{1 2 3 4 5} #{[1 2] [1 3] [3 4] [2 5]}))
+> user> (def q3 (make-graph \#{1 2 3 4 5} \#{[1 2] [1 3] [3 4] [2 5]}))
 > #'user/q3
 
 > user> (breadth-first-traversal q3 1)

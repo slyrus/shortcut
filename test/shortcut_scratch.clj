@@ -45,3 +45,15 @@
                  (reduce #(add-node %1 %2) (make-graph) (range 50))
                  (take 100 (repeatedly #(vector (rand-int 50)
                                                 (rand-int 50))))))
+
+;;; this breaks connected components!!! puts a nil in node-set. should not do that...
+(def q12 (add-edges (make-graph (set (range 1 3)))
+                    [[1 1] [1 2] ]))
+(connected-components q12)
+
+;;; well, it's actually partition-graph that's broken:
+(partition-graph q12 1)
+;;; [{:shortcut.graph/edge-map {1 {2 [1 2]}, 2 {1 [1 2]}}, :shortcut.graph/node-set #{nil 1 2}} {:shortcut.graph/edge-map {}, :shortcut.graph/node-set #{}}]
+;;; should be:
+;;; [{:shortcut.graph/edge-map {1 {2 [1 2]}, 2 {1 [1 2]}}, :shortcut.graph/node-set #{1 2}}]
+;;;

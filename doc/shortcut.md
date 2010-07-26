@@ -218,9 +218,104 @@ breadth-first-traversal-with-path and depth-first-traversal-with-path:
 
 ## Finding Nodes
 
+To find a given node in a graph, use the find-node function:
+
+    user> (def q8 (reduce #(add-node %1 (str "node" %2)) (make-graph) (range 1000)))
+    #'user/q8
+    user> (def q9 (reduce (fn [g [n1 n2]]
+                      (add-edge g (str "node" n1) (str "node" n2)))
+                    q8
+                    (take 10000 (repeatedly #(vector (rand-int 1000)
+                                                     (rand-int 1000))))))
+    #'user/q9
+    user> (find-node q9 "node512")
+    ["node42" "node383" "node512"]
+    user> (find-node q9 "node512" "node12")
+    ["node12" "node347" "node512"]
+
+Find does a breadth-first-search on graph and returns the path to the
+given node, if found. In contrast, breadth-first-traversal returns all
+the nodes reachable from the starting node in breadth-first
+order. Note that find-node takes an optional start argument so one can
+find the path from a given node to another.
+
 ## Connected Components
+
+To find the connected components of a graph, use the connected-components function. Connected components returns a sequence of graphs, each containing a connected component of the original graph.
+
+    user> (def q10 (add-edges (make-graph (set (range 1 10)))
+                        [[1 2] [1 3] [3 4] [4 5] [2 6] [7 8] [8 9] [7 9]]))
+    #'user/q10
+    user> (map clojure.pprint/pprint
+         (map #(vector %
+                       (graph-distance-matrix %))
+              (connected-components q10)))
+    ([{:shortcut.graph/edge-map
+      {8 {9 [8 9], 7 [7 8]}, 7 {8 [7 8], 9 [7 9]}, 9 {8 [8 9], 7 [7 9]}},
+      :shortcut.graph/node-set #{7 8 9}}
+     [[0, 1, 1], [1, 0, 1], [1, 1, 0]]]
+    [{:shortcut.graph/edge-map
+      {6 {2 [2 6]},
+       5 {4 [4 5]},
+       4 {5 [4 5], 3 [3 4]},
+       2 {6 [2 6], 1 [1 2]},
+       1 {2 [1 2], 3 [1 3]},
+       3 {4 [3 4], 1 [1 3]}},
+      :shortcut.graph/node-set #{1 2 3 4 5 6}}
+     [[0, 1, 1, 2, 3, 2], [1, 0, 2, 3, 4, 1], [1, 2, 0, 1, 2, 3],
+      [2, 3, 1, 0, 1, 4], [3, 4, 2, 1, 0, 5], [2, 1, 3, 4, 5, 0]]]
+    nil nil)
+
+To retrieve a graph with a single connected component from a give graph, use the connected-component function:
+
+    user> (connected-component q10 9)
+    {:shortcut.graph/edge-map {8 {7 [7 8], 9 [8 9]}, 7 {8 [7 8], 9 [7 9]}, 9 {8 [8 9], 7 [7 9]}}, :shortcut.graph/node-set #{7 8 9}}
+
+To retrieve a graph with a single connected component removed, use the remove-connected-component function:
+
+    user> (remove-connected-component q10 9)
+    {:shortcut.graph/edge-map {6 {2 [2 6]}, 5 {4 [4 5]}, 4 {5 [4 5], 3 [3 4]}, 3 {4 [3 4], 1 [1 3]}, 1 {3 [1 3], 2 [1 2]}, 2 {6 [2 6], 1 [1 2]}}, :shortcut.graph/node-set #{1 2 3 4 5 6}}
+
+To get both a single connected from a graph and the rest of the graph with the given component removed, use the partition-graph function:
+
+    user> (clojure.pprint/pprint (partition-graph q10 9))
+    [{:shortcut.graph/edge-map
+      {8 {7 [7 8], 9 [8 9]}, 7 {8 [7 8], 9 [7 9]}, 9 {8 [8 9], 7 [7 9]}},
+      :shortcut.graph/node-set #{7 8 9}}
+     {:shortcut.graph/edge-map
+      {6 {2 [2 6]},
+       5 {4 [4 5]},
+       4 {5 [4 5], 3 [3 4]},
+       3 {4 [3 4], 1 [1 3]},
+       1 {3 [1 3], 2 [1 2]},
+       2 {6 [2 6], 1 [1 2]}},
+      :shortcut.graph/node-set #{1 2 3 4 5 6}}]
+    nil
 
 ## Distance Matrix
 
+To compute the distance, that is the lenght of the shortest path,
+between any two nodes, use the graph-distance-matrix function, which
+returns a Java 2D array:
+
+    user> (graph-distance-matrix q10)
+    #<int[][] [[I@4a5ecdd2>
+
+    user> (clojure.pprint/pprint (graph-distance-matrix q10))
+    [[0, 1, 1, 2, 3, 2, -1, -1, -1], [1, 0, 2, 3, 4, 1, -1, -1, -1],
+     [1, 2, 0, 1, 2, 3, -1, -1, -1], [2, 3, 1, 0, 1, 4, -1, -1, -1],
+     [3, 4, 2, 1, 0, 5, -1, -1, -1], [2, 1, 3, 4, 5, 0, -1, -1, -1],
+     [-1, -1, -1, -1, -1, -1, 0, 1, 1], [-1, -1, -1, -1, -1, -1, 1, 0, 1],
+     [-1, -1, -1, -1, -1, -1, 1, 1, 0]]
+    nil
+
+Note that the distance between two unreachable nodes is arbitrarily
+set to -1 and the distance between a node and itself is 0, whether or
+not there is an explicit self-edge. (Note that self edges aren't
+particularly well thought out at this point.)
+
 ## Shortcut Internals
+
+Currently, two protocols are used to define the behavior supported by
+objects in graphs: NodeSet and EdgeSet. More documentation to follow.
 

@@ -151,6 +151,28 @@
                 (breadth-first-traversal g (into (pop queue) next)
                                          (into (conj visited node) next))))))))
 
+;;;
+;;; note: the following version uses recur instead of recursing by
+;;; directly calling itself. The tradeoff is that now I can't return a
+;;; lazy-seq (I think). Is this good? What are the practical effects
+;;; of not using recur? I suppose big graphs could be a problem with
+;;; the other approach. I'll keep this here for the moment and perhaps
+;;; somebody who knows this stuff better than I do will eventually
+;;; weigh in on the merits of recur here. Also, bft recur returns a
+;;; vector instead of a lazy-seq.
+(defn- bft-recur
+  ([g start]
+     (when (node? g start)
+       (bft-recur g (conj (clojure.lang.PersistentQueue/EMPTY) start) #{} [])))
+  ([g queue visited acc]
+     (if (peek queue)
+       (let [node (peek queue)
+             next (remove visited (neighbors g node))]
+         (recur g (into (pop queue) next)
+                (into (conj visited node) next)
+                (conj acc node)))
+       acc)))
+
 ;;; often it's nice to not just do a search, but keep a trail of the
 ;;; path of how one got to a particular node. we're also going to want
 ;;; to know the distance from the start, so we can just take the
@@ -172,6 +194,9 @@
                              (map #(conj path %) next))
                        (into (conj visited node) next))))))))
 
+;;; note: In contrast to breadth-first-traversal above, in this case,
+;;; since we're not returning a lazy-seq, it's trivial (?) to use
+;;; recur instead of calling find-node recursively.
 (defn find-node
   "finds the target node in g, either starting from a given node, or
 from an (arbitrarily chosen) first node. If target is unreachable from
@@ -189,12 +214,9 @@ the starting node, returns nil."
              next (remove visited (neighbors g node))]
          (if (= node target)
            path
-           (find-node
-            g
-            target
-            (into (pop queue)
-                  (map #(conj path %) next))
-            (into (conj visited node) next)))))))
+           (recur g target (into (pop queue)
+                                 (map #(conj path %) next))
+                  (into (conj visited node) next)))))))
 
 (defn depth-first-traversal
   ([g start]

@@ -27,8 +27,7 @@
 ;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns shortcut.graph
-  (:use clojure.contrib.seq))
+(ns shortcut.graph)
 
 (defprotocol NodeSet
   (nodes [graph])
@@ -323,7 +322,7 @@ first node to the second node"
 (defn position [coll x]
   (some (fn [[a b]]
           (when (= b x) a))
-        (indexed coll)))
+        (map vector (iterate inc 0) coll)))
 
 (defn graph-distance-matrix [g]
   "Returns a 2-d array of the distance (shortest path) between two

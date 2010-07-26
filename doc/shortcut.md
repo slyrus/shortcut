@@ -52,7 +52,7 @@ entirely new graph, with the nodes of the original graph and the new
 node added. To see an example of this, first lets make a graph and store it in a var:
 
 > user> (def q (make-graph \#{1 2 3 4} {}))
-> #'user/q
+> \#'user/q
 
 To make sure that we did this right, let's check the nodes of q:
 
@@ -101,7 +101,7 @@ calling a function with it, bind it locally to a symbol via let, or
 assign it to a var with def:
 
 > user> (def q2 (add-edge (add-edge q 3 1) 1 4))
-> #'user/q2
+> \#'user/q2
 
 To remove a node from a graph, or, more precisely, to create a new
 graph containing the nodes and edges of the original graph, but for
@@ -124,7 +124,7 @@ To remove an edge, use the remove-edge function:
 To make a graph with 1000 nodes where the nodes are the integers from 0 to 999, do:
 
 > user> (def q6 (reduce #(add-node %1 %2) (make-graph) (range 1000)))
-> #'user/q6
+> \#'user/q6
 > user> (count (nodes q6))
 > 1000
 
@@ -134,7 +134,7 @@ To create a graph 10,000 randomly chosen edges and the nodes 0-999 as above:
 >                 q6
 >                 (take 10000 (repeatedly #(vector (rand-int 1000)
 >                                                (rand-int 1000))))))
-> #'user/q7
+> \#'user/q7
 
 
 ## Neighbors
@@ -171,13 +171,13 @@ Now that we've got a routine for identifying the neighbors of a given node in a 
 
 > user> (def q8 (reduce #(add-node %1 %2) (make-graph) (range 100)))
 > 
-> #'user/q8
+> \#'user/q8
 
 > user> (def q9 (reduce (fn [g [n1 n2]] (add-edge g n1 n2))
 >                 q8
 >                 (take 1000 (repeatedly #(vector (rand-int 100)
 >                                                  (rand-int 100))))))
-> #'user/q9
+> \#'user/q9
 
 Now let's do a breadth-first traversal from node 0:
 
@@ -192,7 +192,7 @@ And we'll see that we get different results from doing a depth-first-search:
 To see what's going on here, let's try a simpler example:
 
 > user> (def q3 (make-graph \#{1 2 3 4 5} \#{[1 2] [1 3] [3 4] [2 5]}))
-> #'user/q3
+> \#'user/q3
 
 > user> (breadth-first-traversal q3 1)
 > (1 3 2 4 5)

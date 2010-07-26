@@ -267,16 +267,18 @@ second element is the a graph containing the rest of graph, that is
 graph after removing the connected component containing start."
   (letfn [(connected-component*
            [[new old] node]
-           (reduce connected-component*
-                   (let [[new2 old2]
-                         (reduce (fn [[new old] edge]
-                                   [(add-edge new edge)
-                                    (remove-edge old edge)])
-                                 [new old]
-                                 (edges old node))]
-                     [(add-node new2 node)
-                      (remove-node old2 node)])
-                   (neighbors old node)))]
+           (if node
+             (reduce connected-component*
+                     (let [[new2 old2]
+                           (reduce (fn [[new old] edge]
+                                     [(add-edge new edge)
+                                      (remove-edge old edge)])
+                                   [new old]
+                                   (edges old node))]
+                       [(add-node new2 node)
+                        (remove-node old2 node)])
+                     (neighbors old node))
+             [new old]))]
     (connected-component* [(make-graph) graph] start)))
 
 (defn connected-component [graph start]
@@ -340,3 +342,18 @@ unreachable from another node, the distance between the nodes is -1."
                 inindex (position nodes inner)]
             (aset a outindex inindex distance))))
       a)))
+
+(defn find-cycle 
+  ([g]
+     (reduce #(or %1 %2)
+             (map #(find-cycle % (first (nodes %)))
+                  (connected-components g))))
+  ([g start]
+     (reduce #(or %1 %2)
+             (map (fn [neighbor]
+                    (find-node (remove-edge g start neighbor) neighbor start))
+                  (neighbors g start)))))
+
+(defn graph-empty? [g]
+  "returns true if there are no nodes in g."
+  (empty? (nodes g)))

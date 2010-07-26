@@ -12,7 +12,7 @@ to build:
 to install via maven:
 
    mvn install:install-file -DgroupId=shortcut -DartifactId=shortcut \
-       -Dversion=0.0.0 -Dpackaging=jar -Dfile=shortcut-0.0.0.jar
+       -Dversion=0.0.1 -Dpackaging=jar -Dfile=shortcut-0.0.1.jar
 
 
 shortcut can be found at:

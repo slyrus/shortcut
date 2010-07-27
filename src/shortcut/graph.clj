@@ -285,13 +285,16 @@ graph after removing the connected component containing start."
 contains start."
   (first (partition-graph graph start)))
 
-(defn connected-components [graph & [acc]]
+(defn connected-components [graph]
   "returns a sequence of the connected components of g"
-  (if (empty? (nodes graph))
-    acc
-    (let [[part rest] (partition-graph graph (first (nodes graph)))]
-      (when (nodes rest)
-        (connected-components rest (conj acc part))))))
+  (letfn [(connected-components*
+           [graph acc]
+           (if (empty? (nodes graph))
+             acc
+             (let [[part rest] (partition-graph graph (first (nodes graph)))]
+               (when (nodes rest)
+                 (recur rest (conj acc part))))))]
+    (connected-components* graph nil)))
 
 (defn find-longest-paths [g]
   "Finds a longest path acecssible from each node in the

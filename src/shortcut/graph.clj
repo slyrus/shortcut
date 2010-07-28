@@ -132,6 +132,9 @@
 (defn add-nodes [g & node-vec]
   (reduce (fn [g node] (add-node g node)) g node-vec))
 
+(defn get-node [g node]
+  (get (nodes g) node))
+
 (defn make-graph
   ([] (assoc {} ::node-set #{} ::edge-map {}))
   ([nodes] (assoc {} ::node-set nodes ::edge-map{}))
@@ -337,3 +340,4 @@ unreachable from another node, the distance between the nodes is -1."
 (defn graph-empty? [g]
   "returns true if there are no nodes in g."
   (empty? (nodes g)))
+

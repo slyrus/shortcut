@@ -137,7 +137,8 @@
 
 (defn make-graph
   ([] (assoc {} ::node-set #{} ::edge-map {}))
-  ([nodes] (assoc {} ::node-set nodes ::edge-map{}))
+  ([nodes] (if nodes (assoc {} ::node-set nodes ::edge-map {})
+               (make-graph)))
   ([nodes edge-vec] (add-edges (make-graph nodes) edge-vec)))
 
 (defn breadth-first-traversal

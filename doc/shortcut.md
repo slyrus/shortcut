@@ -8,6 +8,28 @@ undirected graphs. The clojure.contrib.graph package only works with
 directed graphs, and I needed to represent undirected graphs, hence
 shortcut.
 
+Shortcut is a functional library for graphs in which the data is
+represented by immutable data structures. The consequence of this is
+that when you "add a node" to a graph, you don't, strictly speaking,
+modify the existing graph such that it has an additional node, but
+rather you create a new graph which contains all of the original nodes
+and a new node. This functional style may take some getting used to at
+first, but it is consistent with the general design principles
+embodied in clojure. Ok, you might be thinking: "isn't this horribly
+inefficient?" Well, it turns out that clojure was designed for exactly
+this sort of thing and has a number of efficient primitive operations
+to support this design. Ok, and now you might be thinking "but that's
+insane; how do I add a whole bunch of nodes and edges to a graph?"
+Well, the general idea is to either use recursive functions or, better
+yet, use the reduce function which allows one to pass an argument
+between successive iterations of calling a given function. This allows
+one to do things like:
+
+    (reduce add-node (make-graph)
+            ["these" "strings" "will" "all" "each" "be" "nodes"])
+
+# Using Shortcut
+
 To use shortcut from your clojure
 application/repl/programming-environment of choice, make sure that
 either the shortcut jar or source directory is on your classpath and

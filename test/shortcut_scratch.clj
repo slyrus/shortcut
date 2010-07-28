@@ -55,6 +55,11 @@
 (def q12 (add-edges (make-graph (set (range 1 3)))
                     [[1 1] [1 2] ]))
 
+(def q13 (reduce (fn [g [n1 n2]] (add-edge g n1 n2))
+                 (reduce #(add-node %1 %2) (make-graph) (range 50))
+                 (take 60 (repeatedly #(vector (rand-int 50)
+                                               (rand-int 50))))))
 (connected-components q12)
 
 (partition-graph q12 1)
+

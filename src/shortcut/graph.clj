@@ -52,6 +52,15 @@
   (node? [v node] (some #{node} v))
   (neighbors [v node] (remove #{node} v)))
 
+(defprotocol Edge
+  (left [edge])
+  (right [edge]))
+
+(extend-protocol Edge
+  clojure.lang.IPersistentVector
+  (left [v] (first v))
+  (right [v] (second v)))
+
 ;;; Arcs aren't supported yet. keep the protocol and some methods on it
 ;;; here for the moment though.
 (defprotocol Arc
@@ -59,7 +68,7 @@
   (end [edge]))
 
 (extend-protocol Arc
-  clojure.lang.PersistentVector
+  clojure.lang.IPersistentVector
   (start [v] (first v))
   (end [v] (second v)))
 
@@ -90,7 +99,7 @@
          (some #(when (node? % n2) %)
                (vals (get (::edge-map g) n1))))
   (add-edge ([g edge]
-               (let [[n1 n2] edge]
+               (let [n1 (left edge) n2 (right edge)]
                  (letfn [(add-1-edge [e n1 n2]
                                      (assoc e n1 (assoc (or (get e n1) {}) n2 edge)))]
                    (if (some #(node? % n2) (edges g n1))
@@ -137,8 +146,9 @@
 
 (defn make-graph
   ([] (assoc {} ::node-set #{} ::edge-map {}))
-  ([nodes] (if nodes (assoc {} ::node-set nodes ::edge-map {})
-               (make-graph)))
+  ([nodes] (if nodes
+             (assoc {} ::node-set nodes ::edge-map {})
+             (make-graph)))
   ([nodes edge-vec] (add-edges (make-graph nodes) edge-vec)))
 
 (defn breadth-first-traversal

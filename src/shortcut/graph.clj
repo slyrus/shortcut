@@ -123,7 +123,7 @@
                              (add-1-edge (::edge-map g) n2 n1 obj)
                              n1 n2 obj)))))))
   (remove-edge ([g edge]
-                  (apply remove-edge g edge))
+                  (remove-edge g (left edge) (right edge)))
                ([g n1 n2]
                   (letfn [(remove-1-edge [e n1 n2]
                                          (let [inner (dissoc (or (get e n1) {}) n2)]

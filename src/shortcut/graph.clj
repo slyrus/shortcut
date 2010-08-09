@@ -79,8 +79,8 @@
   (add-node [g n]
             (assoc g ::node-set (conj (::node-set g) n)))
   (remove-node [v node]
-               (let [edges-removed (reduce (fn [v [n1 n2]]
-                                             (remove-edge v n1 n2))
+               (let [edges-removed (reduce (fn [v e]
+                                             (remove-edge v (left e) (right e)))
                                            v
                                     (edges v node))]
                  (assoc v
